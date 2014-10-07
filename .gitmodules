@@ -1,0 +1,3 @@
+[submodule "mysql-hyperloglog"]
+	path = mysql-hyperloglog
+	url = https://github.com/amirtuval/mysql-hyperloglog.git
