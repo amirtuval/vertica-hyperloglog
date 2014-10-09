@@ -13,7 +13,7 @@
 SDK_HOME?=/opt/vertica/sdk
 
 CXX?=g++
-CXXFLAGS:=$(CXXFLAGS) -I $(SDK_HOME)/include -g -Wall -Wno-unused-value -shared -fPIC 
+CXXFLAGS:=$(CXXFLAGS) -I $(SDK_HOME)/include -I mysql-hyperloglog/libmysqlhll -I mysql-hyperloglog/libmysqlhll/cpp-hyperloglog/include -I mysql-hyperloglog/libmysqlhll/base64 -g -Wall -Wno-unused-value -shared -fPIC 
 
 ifdef OPTIMIZE
 ## UDLs should be compiled with compiler optimizations in release builds
@@ -25,12 +25,6 @@ BUILD_DIR?=$(abspath build)
 
 ## Set to a valid temporary directory
 TMPDIR?=/tmp
-
-## Set to the path to 
-BOOST_INCLUDE ?= /usr/include
-CURL_INCLUDE ?= /usr/include
-ZLIB_INCLUDE ?= /usr/include
-BZIP_INCLUDE ?= /usr/include
 
 all: libverticahll
 
