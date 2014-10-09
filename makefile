@@ -32,18 +32,15 @@ CURL_INCLUDE ?= /usr/include
 ZLIB_INCLUDE ?= /usr/include
 BZIP_INCLUDE ?= /usr/include
 
-all: AggregateFunctions
+all: libverticahll
 
 $(BUILD_DIR)/.exists:
 	test -d $(BUILD_DIR) || mkdir -p $(BUILD_DIR)
 	touch $(BUILD_DIR)/.exists
 
-###
-# Aggregate Functions
-###
-AggregateFunctions: $(BUILD_DIR)/AggregateFunctions.so
+libverticahll: $(BUILD_DIR)/libverticahll.so
 
-$(BUILD_DIR)/AggregateFunctions.so: AggregateFunctions/*.cpp $(SDK_HOME)/include/Vertica.cpp $(SDK_HOME)/include/BuildInfo.h $(BUILD_DIR)/.exists
+$(BUILD_DIR)/libverticahll.so: AggregateFunctions/*.cpp $(SDK_HOME)/include/Vertica.cpp $(SDK_HOME)/include/BuildInfo.h $(BUILD_DIR)/.exists
 	$(CXX) $(CXXFLAGS) -o $@ AggregateFunctions/*.cpp $(SDK_HOME)/include/Vertica.cpp
 
 clean:
