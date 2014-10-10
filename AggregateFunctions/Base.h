@@ -13,6 +13,7 @@ protected:
 
 private:
     virtual void onTerminate(VString& hllStr, BlockWriter &resWriter) = 0;
+    virtual void addItem(void* hll, const VString& item) = 0;
 
     virtual void initAggregate(
         ServerInterface &srvInterface, 
@@ -34,6 +35,14 @@ private:
         IntermediateAggs &aggs);
 
     InlineAggregate()
+};
+
+class SimpleHllAggregateFunctionBase : public HllAggregateFunctionBase {
+    virtual void addItem(void* hll, const VString& item);
+};
+
+class MergeHllAggregateFunctionBase : public HllAggregateFunctionBase {
+    virtual void addItem(void* hll, const VString& item);
 };
 
 template <class T>

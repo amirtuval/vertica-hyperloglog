@@ -10,25 +10,27 @@
 
 #include "Base.h"
 
-class HllCompute : public SimpleHllAggregateFunctionBase {
+class HllMerge : public MergeHllAggregateFunctionBase {
     
     virtual void onTerminate(VString& hllStr, BlockWriter &resWriter) {
-        resWriter.setInt(estimate(hllStr));
+            VString &out = resWriter.getStringRef();
+            out.copy(hllStr.data());
     }
 };
 
 
-class HllComputeFactory : public HllAggregateFunctionBaseFactory<HllCompute> {
+class HllMergeFactory : public HllAggregateFunctionBaseFactory<HllMerge> {
     virtual void getReturnType(ServerInterface &srvfloaterface, 
                                const SizedColumnTypes &inputTypes, 
                                SizedColumnTypes &outputTypes) {
-        outputTypes.addInt();
+        outputTypes.addVarchar(mMaxResultLength);
     }
 
     virtual void setReturnType(ColumnTypes& returnType) {
-    	returnType.addInt();
-	}
+        returnType.addVarchar();
+    }
+
 };
 
-RegisterFactory(HllComputeFactory);
+RegisterFactory(HllMergeFactory);
 

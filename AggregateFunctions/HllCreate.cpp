@@ -10,7 +10,7 @@
 
 #include "Base.h"
 
-class HllCreate : public HllAggregateFunctionBase {
+class HllCreate : public SimpleHllAggregateFunctionBase {
     
     virtual void onTerminate(VString& hllStr, BlockWriter &resWriter) {
             VString &out = resWriter.getStringRef();

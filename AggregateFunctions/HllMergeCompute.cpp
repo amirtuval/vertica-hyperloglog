@@ -10,7 +10,7 @@
 
 #include "Base.h"
 
-class HllCompute : public SimpleHllAggregateFunctionBase {
+class HllMergeCompute : public MergeHllAggregateFunctionBase {
     
     virtual void onTerminate(VString& hllStr, BlockWriter &resWriter) {
         resWriter.setInt(estimate(hllStr));
@@ -18,7 +18,7 @@ class HllCompute : public SimpleHllAggregateFunctionBase {
 };
 
 
-class HllComputeFactory : public HllAggregateFunctionBaseFactory<HllCompute> {
+class HllMergeComputeFactory : public HllAggregateFunctionBaseFactory<HllMergeCompute> {
     virtual void getReturnType(ServerInterface &srvfloaterface, 
                                const SizedColumnTypes &inputTypes, 
                                SizedColumnTypes &outputTypes) {
@@ -30,5 +30,6 @@ class HllComputeFactory : public HllAggregateFunctionBaseFactory<HllCompute> {
 	}
 };
 
-RegisterFactory(HllComputeFactory);
+RegisterFactory(HllMergeComputeFactory);
+
 

@@ -35,7 +35,7 @@ void HllAggregateFunctionBase::aggregate(
         do {
             const VString &input = argReader.getStringRef(0);
             if (!input.isNull()) {
-                hll.add(input.data(), input.length());
+                addItem((void*)&hll, input);
             }
         } while (argReader.next());
 
@@ -92,4 +92,16 @@ int HllAggregateFunctionBase::estimate(const VString& hllStr) {
     delete hll;
 
     return result;
+}
+
+void SimpleHllAggregateFunctionBase::addItem(void* hll, const VString& item) {
+    SerializedHyperLogLog* phll = (SerializedHyperLogLog*)hll;
+    phll->add(item.data(), item.length());
+}
+
+void MergeHllAggregateFunctionBase::addItem(void* hll, const VString& item) {
+    SerializedHyperLogLog* phll = (SerializedHyperLogLog*)hll;
+    SerializedHyperLogLog* newHll = hllFromStr(item);
+    phll->merge(*newHll);
+    delete newHll;
 }
