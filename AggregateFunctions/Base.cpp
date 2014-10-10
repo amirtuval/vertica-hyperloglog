@@ -60,7 +60,7 @@ void HllAggregateFunctionBase::combine(
 
         // Combine all the other intermediate aggregates
         do {
-            SerializedHyperLogLog* currentHll = SerializedHyperLogLog::fromString(aggsOther.getStringRef(0).data());
+            SerializedHyperLogLog* currentHll = hllFromStr(aggsOther.getStringRef(0));
             hll->merge(*currentHll);
             delete currentHll;
         } while (aggsOther.next());
