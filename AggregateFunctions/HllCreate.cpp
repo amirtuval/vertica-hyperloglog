@@ -13,8 +13,8 @@
 class HllCreate : public SimpleHllAggregateFunctionBase {
     
     virtual void onTerminate(VString& hllStr, BlockWriter &resWriter) {
-            VString &out = resWriter.getStringRef();
-            out.copy(hllStr.data());
+        VString &out = resWriter.getStringRef();
+        out.copy(hllStr);
     }
 };
 

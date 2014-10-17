@@ -34,8 +34,8 @@ $(BUILD_DIR)/.exists:
 
 libverticahll: $(BUILD_DIR)/libverticahll.so
 
-$(BUILD_DIR)/libverticahll.so: AggregateFunctions/*.cpp $(SDK_HOME)/include/Vertica.cpp $(SDK_HOME)/include/BuildInfo.h $(BUILD_DIR)/.exists
-	$(CXX) $(CXXFLAGS) -o $@ AggregateFunctions/*.cpp $(SDK_HOME)/include/Vertica.cpp
+$(BUILD_DIR)/libverticahll.so: AggregateFunctions/*.cpp ScalarFunctions/*.cpp $(SDK_HOME)/include/Vertica.cpp $(SDK_HOME)/include/BuildInfo.h $(BUILD_DIR)/.exists
+	$(CXX) $(CXXFLAGS) -o $@ AggregateFunctions/*.cpp ScalarFunctions/*.cpp $(SDK_HOME)/include/Vertica.cpp
 
 clean:
 	rm -f $(BUILD_DIR)/*.so 

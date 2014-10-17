@@ -7,6 +7,8 @@
 using namespace Vertica;
 using namespace std;
 
+int resultLength();
+
 class HllAggregateFunctionBase : public AggregateFunction {
 protected:
     int estimate(const VString& hllStr);
@@ -54,7 +56,7 @@ protected:
 public:
 
     HllAggregateFunctionBaseFactory() {
-        mMaxResultLength = ceil(pow(2, HLL_BIT_WIDTH) / 3.0) * 4 + 20;
+        mMaxResultLength = resultLength();
     }
 
     virtual void setReturnType(ColumnTypes &returnType) = 0;

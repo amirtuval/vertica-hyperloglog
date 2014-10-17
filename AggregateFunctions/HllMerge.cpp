@@ -14,7 +14,7 @@ class HllMerge : public MergeHllAggregateFunctionBase {
     
     virtual void onTerminate(VString& hllStr, BlockWriter &resWriter) {
             VString &out = resWriter.getStringRef();
-            out.copy(hllStr.data());
+            out.copy(hllStr);
     }
 };
 

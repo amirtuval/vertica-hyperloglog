@@ -41,7 +41,7 @@ drop table if exists daily_user_visits;
 create table daily_user_visits (
   day date,
   url varchar(255),
-  user_hll varchar(5468),
+  user_hll varchar(6000),
   visit_length_in_minutes integer,
   unique(day, url)
 );
@@ -67,19 +67,32 @@ group by url;
 
 # build aggregation incrementally
 
-#truncate table daily_user_visits;
+truncate table daily_user_visits;
 
 # first insert, no unique violation
-#insert into daily_user_visits(day, url, user_hll, visit_length_in_minutes)
-#select date(visit_time), url, hll_create(cast(user_id as varchar)), sum(visit_length_in_minutes)
-#from user_visits
-#where id < 10000
-#group by date(visit_time), url;
+insert into daily_user_visits(day, url, user_hll, visit_length_in_minutes)
+select date(visit_time), url, hll_create(cast(user_id as varchar)), sum(visit_length_in_minutes)
+from user_visits
+where id < 10000
+group by date(visit_time), url;
 
-# second insert, on unique violation we update the existing row
-#insert into daily_user_visits(day, url, user_hll, visit_length_in_minutes)
-#select date(visit_time), url, hll_create(user_id), sum(visit_length_in_minutes)
-#from user_visits
-#where id >= 10000
-#group by date(visit_time), url
-#on duplicate key update user_hll=(select hll_merge(user_hll, values(user_hll))), visit_length_in_minutes=visit_length_in_minutes+values(visit_length_in_minutes); 
+drop table if exists daily_user_visits_temp;
+create table daily_user_visits_temp (
+  day date,
+  url varchar(255),
+  user_hll varchar(6000),
+  visit_length_in_minutes integer,
+  unique(day, url)
+);
+
+insert into daily_user_visits_temp(day, url, user_hll, visit_length_in_minutes)
+select date(visit_time), url, hll_create(cast(user_id as varchar)), sum(visit_length_in_minutes)
+from user_visits
+where id >= 10000
+group by date(visit_time), url;
+
+merge into daily_user_visits d using daily_user_visits_temp v on (d.url = v.url and d.day = v.day)
+when matched then update set visit_length_in_minutes = d.visit_length_in_minutes + v.visit_length_in_minutes, user_hll = HLL_MERGE2(d.user_hll, v.user_hll);
+
+drop table if exists daily_user_visits_temp;
+
