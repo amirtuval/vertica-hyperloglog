@@ -66,22 +66,14 @@ void mergeTwoHlls(ServerInterface &srvInterface, const VString& hllStr1, const V
 void HllAggregateFunctionBase::aggregate(
     ServerInterface &srvInterface, 
     BlockReader &argReader, 
-    IntermediateAggs &aggs) {
+    void* state) {
     try {
-        SerializedHyperLogLog hll(HLL_BIT_WIDTH);
-
         do {
             const VString &input = argReader.getStringRef(0);
             if (!input.isNull()) {
-                addItem((void*)&hll, input);
+                addItem(state, input);
             }
         } while (argReader.next());
-
-        VString &result = aggs.getStringRef(0);
-        SerializedHyperLogLog* currentHll = hllFromStr(result);
-        hll.merge(*currentHll);
-        delete currentHll;
-        updateStringFromHll(result, &hll);
     } catch(exception& e) {
         // Standard exception. Quit.
         vt_report_error(0, "Exception while processing aggregate: [%s]", e.what());
@@ -143,4 +135,45 @@ void MergeHllAggregateFunctionBase::addItem(void* hll, const VString& item) {
     SerializedHyperLogLog* newHll = hllFromStr(item);
     phll->merge(*newHll);
     delete newHll;
+}
+
+void* HllAggregateFunctionBase::createAggregateState() {
+    return (void*)new std::map<char*, SerializedHyperLogLog*>();
+}
+
+void  HllAggregateFunctionBase::updateResultFromState(IntermediateAggs& intAggs, void* state) {
+    try {
+        SerializedHyperLogLog* hll = (SerializedHyperLogLog*)state;    
+        VString &result = intAggs.getStringRef(0);
+        SerializedHyperLogLog* currentHll = hllFromStr(result);
+        hll->merge(*currentHll);
+        delete currentHll;
+        updateStringFromHll(result, hll);
+    } catch(exception& e) {
+        // Standard exception. Quit.
+        vt_report_error(0, "Exception while processing aggregate: [%s]", e.what());
+    }
+}
+
+void  HllAggregateFunctionBase::deleteAggregateState(void* state) {
+    std::map<char*, SerializedHyperLogLog*>& map = *(std::map<char*, SerializedHyperLogLog*>*)state;
+    for (std::map<char*, SerializedHyperLogLog*>::iterator it=map.begin(); it!=map.end(); ++it) {
+        delete it->second;
+    }
+        
+    delete &map;
+}
+
+void* HllAggregateFunctionBase::getAggregateState(void* state, char* aggPtr) {
+    std::map<char*, SerializedHyperLogLog*>& map = *(std::map<char*, SerializedHyperLogLog*>*)state;
+    std::map<char*, SerializedHyperLogLog*>::iterator it = map.find(aggPtr);
+    SerializedHyperLogLog* hll;
+    if (it == map.end()) {
+        hll = new SerializedHyperLogLog(HLL_BIT_WIDTH);
+        map[aggPtr] = hll;
+    } else {
+        hll = it->second;
+    }
+
+    return (void*)hll;
 }

@@ -9,6 +9,41 @@ using namespace std;
 
 int resultLength();
 
+#define InlineAggregateWithState() \
+    virtual void aggregateArrs(ServerInterface &srvInterface, void **dstTuples,\
+                               int doff, const void *arr, int stride, const void *rcounts,\
+                               int rcstride, int count, IntermediateAggs &intAggs,\
+                               std::vector<int> &intOffsets, BlockReader &arg_reader) {\
+        void* state = createAggregateState(); \
+        char *arg = const_cast<char*>(static_cast<const char*>(arr));\
+        std::map<char*, bool> foundAggs; \
+        const uint8 *rowCountPtr = static_cast<const uint8*>(rcounts);\
+        for (int i=0; i<count; ++i) {\
+            vpos rowCount = *reinterpret_cast<const vpos*>(rowCountPtr);\
+            char *aggPtr = static_cast<char *>(dstTuples[i]) + doff;\
+            foundAggs[aggPtr] = true; \
+            updateCols(arg_reader, arg, rowCount, intAggs, aggPtr, intOffsets);\
+            aggregate(srvInterface, arg_reader, getAggregateState(state, aggPtr));\
+            arg += rowCount * stride;\
+            rowCountPtr += rcstride;\
+        }\
+        arg = const_cast<char*>(static_cast<const char*>(arr));\
+        for (int i=0; i<count; ++i) {\
+            vpos rowCount = *reinterpret_cast<const vpos*>(rowCountPtr);\
+            char *aggPtr = static_cast<char *>(dstTuples[i]) + doff;\
+            updateCols(arg_reader, arg, rowCount, intAggs, aggPtr, intOffsets);\
+            if (foundAggs.find(aggPtr) != foundAggs.end()) { \
+                updateResultFromState(intAggs, getAggregateState(state, aggPtr)); \
+                foundAggs.erase(aggPtr); \
+                if (foundAggs.size() == 0) \
+                    break; \
+            } \
+            arg += rowCount * stride;\
+            rowCountPtr += rcstride;\
+        } \
+        deleteAggregateState(state); \
+    }\
+
 class HllAggregateFunctionBase : public AggregateFunction {
 protected:
     int estimate(const VString& hllStr);
@@ -21,10 +56,15 @@ private:
         ServerInterface &srvInterface, 
         IntermediateAggs &aggs);
     
+    void* createAggregateState();
+    void* getAggregateState(void* state, char* aggPtr);
+    void  updateResultFromState(IntermediateAggs& intAggs, void* state);
+    void  deleteAggregateState(void* state);
+
     virtual void aggregate(
         ServerInterface &srvInterface, 
         BlockReader &argReader, 
-        IntermediateAggs &aggs);
+        void* state);
 
     virtual void combine(
         ServerInterface &srvInterface, 
@@ -36,7 +76,7 @@ private:
         BlockWriter &resWriter, 
         IntermediateAggs &aggs);
 
-    InlineAggregate()
+    InlineAggregateWithState()
 };
 
 class SimpleHllAggregateFunctionBase : public HllAggregateFunctionBase {
