@@ -15,6 +15,8 @@ class HllCompute : public SimpleHllAggregateFunctionBase {
     virtual void onTerminate(VString& hllStr, BlockWriter &resWriter) {
         resWriter.setInt(estimate(hllStr));
     }
+
+    virtual void* createNewHll() { return createHll(); }
 };
 
 

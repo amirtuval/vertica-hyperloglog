@@ -50,7 +50,7 @@ protected:
 
 private:
     virtual void onTerminate(VString& hllStr, BlockWriter &resWriter) = 0;
-    virtual void addItem(void* hll, const VString& item) = 0;
+    virtual void addItem(ServerInterface &srvInterface, void* hll, const VString& item) = 0;
 
     virtual void initAggregate(
         ServerInterface &srvInterface, 
@@ -80,11 +80,18 @@ private:
 };
 
 class SimpleHllAggregateFunctionBase : public HllAggregateFunctionBase {
-    virtual void addItem(void* hll, const VString& item);
+
+private:
+    virtual void* createNewHll() = 0;
+    virtual void addItem(ServerInterface &srvInterface, void* hll, const VString& item);
+    
+protected:
+    virtual void* createHll();
+    virtual void* createLegacyHll();
 };
 
 class MergeHllAggregateFunctionBase : public HllAggregateFunctionBase {
-    virtual void addItem(void* hll, const VString& item);
+    virtual void addItem(ServerInterface &srvInterface, void* hll, const VString& item);
 };
 
 template <class T>

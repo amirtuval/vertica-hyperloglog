@@ -10,18 +10,18 @@
 
 #include "Base.h"
 
-class HllCreate : public SimpleHllAggregateFunctionBase {
+class HllCreateLegacy : public SimpleHllAggregateFunctionBase {
     
     virtual void onTerminate(VString& hllStr, BlockWriter &resWriter) {
         VString &out = resWriter.getStringRef();
         out.copy(hllStr);
     }
 
-    virtual void* createNewHll() { return createHll(); }
+    virtual void* createNewHll() { return createLegacyHll(); }
 };
 
 
-class HllCreateFactory : public HllAggregateFunctionBaseFactory<HllCreate> {
+class HllCreateLegacyFactory : public HllAggregateFunctionBaseFactory<HllCreateLegacy> {
     virtual void getReturnType(ServerInterface &srvfloaterface, 
                                const SizedColumnTypes &inputTypes, 
                                SizedColumnTypes &outputTypes) {
@@ -34,5 +34,5 @@ class HllCreateFactory : public HllAggregateFunctionBaseFactory<HllCreate> {
 
 };
 
-RegisterFactory(HllCreateFactory);
+RegisterFactory(HllCreateLegacyFactory);
 

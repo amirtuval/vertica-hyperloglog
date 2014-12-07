@@ -16,25 +16,29 @@ copy user_visits(url, user_id, visit_time FORMAT 'YYYY-MM-DD HH:MI:SS', visit_le
 select date(visit_time), count(distinct user_id) accurate_user_count
 from user_visits
 where url like '%google%'
-group by date(visit_time);
+group by date(visit_time)
+order by 1;
 
 # get estimated counts for google visits per day
 select date(visit_time), hll_compute(cast(user_id as varchar)) estimated_user_count
 from user_visits
 where url like '%google%'
-group by date(visit_time);
+group by date(visit_time)
+order by 1;
 
 # get accurate counts for the last 3 days per url
 select url, count(distinct user_id) accurate_user_count
 from user_visits
 where visit_time >= '2014-06-13'
-group by url;
+group by url
+order by 1;
 
 # get estimated counts for the last 3 days per url
 select url, hll_compute(cast(user_id as varchar)) estimated_user_count
 from user_visits
 where visit_time >= '2014-06-13'
-group by url;
+group by url
+order by 1;
 
 # create aggregated table
 drop table if exists daily_user_visits;
@@ -56,13 +60,15 @@ group by date(visit_time), url;
 select day, hll_merge_compute(user_hll) estimated_user_count
 from daily_user_visits
 where url like '%google%'
-group by day;
+group by day
+order by 1;
 
 # get accurate and estimated counts for the last 3 days per url
 select url, hll_merge_compute(user_hll) estimated_user_count
 from daily_user_visits
 where day >= '2014-06-13'
-group by url;
+group by url
+order by 1;
 
 
 # build aggregation incrementally
