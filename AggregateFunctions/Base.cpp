@@ -48,10 +48,31 @@ void printBinaryHll(ServerInterface& srvInterface, const char* prefix, const VSt
 }
 
 SerializedHyperLogLog* hllFromStr(const VString& str) {
-    if (str.isNull())
+    if (str.isNull()) {
         return NULL;
+    }
 
-    SerializedHyperLogLog* result = SerializedHyperLogLog::fromString(str.data());
+    const char* cstr = str.data();
+    bool needFree = false;
+    char prefix[10];
+    strncpy(prefix, cstr, 10);
+
+    if (strstr(prefix, "bin_") == NULL) {
+      if (cstr[str.length() - 1] != '\0') {
+        needFree = true;
+        char* newcstr = (char*)malloc(str.length() + 1);
+        strncpy(newcstr, str.data(), str.length());
+        newcstr[str.length()] = '\0';
+        cstr = newcstr;
+      }
+    }
+
+    SerializedHyperLogLog* result = SerializedHyperLogLog::fromString(cstr);
+
+    if (needFree) {
+        free((void*)cstr);
+    }
+
     return result;
 }   
 
