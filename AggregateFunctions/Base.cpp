@@ -27,30 +27,31 @@ void HllAggregateFunctionBase::initAggregate(
     
 void updateStringFromHll(VString& str, SerializedHyperLogLog* hll) {
     char* cstr = hll->toString(str.data()); 
-    str.copy(cstr, strlen(cstr) + 1); // +1 to include the \0 in the VString data
+    str.copy(cstr, 9 + hll->registerSize()); // size of prefix + size of binary array. prefix is %d|%d|bin_
 }   
 
+void printBinaryHll(ServerInterface& srvInterface, const char* prefix, const VString& hll) {
+  return;
+  unsigned int i;
+  char buf_str[10000];
+  char* buf_ptr = buf_str;
+
+  if (!hll.isNull()) {
+      for (i = 0; i < hll.length(); i++)
+      {
+          buf_ptr += sprintf(buf_ptr, "%02X ", hll.data()[i]);
+      }
+  }
+
+  *(buf_ptr + 1) = '\0';
+  srvInterface.log("%s: %d %s", prefix, hll.length(), buf_str);
+}
+
 SerializedHyperLogLog* hllFromStr(const VString& str) {
-    if (str.isNull()) {
+    if (str.isNull())
         return NULL;
-    }
 
-    const char* cstr = str.data();
-    bool needFree = false;
-    if (cstr[str.length() - 1] != '\0') {
-        needFree = true;
-        char* newcstr = (char*)malloc(str.length() + 1);
-        strncpy(newcstr, str.data(), str.length());
-        newcstr[str.length()] = '\0';
-        cstr = newcstr;
-    }
-
-    SerializedHyperLogLog* result = SerializedHyperLogLog::fromString(cstr);
-
-    if (needFree) {
-        free((void*)cstr);
-    }
-
+    SerializedHyperLogLog* result = SerializedHyperLogLog::fromString(str.data());
     return result;
 }   
 
@@ -100,11 +101,14 @@ void HllAggregateFunctionBase::combine(
     MultipleIntermediateAggs &aggsOther) {
     try {
         VString& result = aggs.getStringRef(0);
+        printBinaryHll(srvInterface, "combine 1", result);
         SerializedHyperLogLog* hll = hllFromStr(result);
 
         // Combine all the other intermediate aggregates
         do {
-            SerializedHyperLogLog* currentHll = hllFromStr(aggsOther.getStringRef(0));
+            const VString& agg = aggsOther.getStringRef(0);
+            printBinaryHll(srvInterface, "combine 2", agg);
+            SerializedHyperLogLog* currentHll = hllFromStr(agg);
             if (hll == NULL) {
                 hll = currentHll;
                 currentHll = NULL;
@@ -125,6 +129,7 @@ void HllAggregateFunctionBase::combine(
         // Standard exception. Quit.
         vt_report_error(0, "Exception while combining intermediate aggregates: [%s]", e.what());
     }
+
 }
 
 void HllAggregateFunctionBase::terminate(
@@ -133,6 +138,8 @@ void HllAggregateFunctionBase::terminate(
     IntermediateAggs &aggs) {
     try {
         VString& agg = aggs.getStringRef(0);
+
+        printBinaryHll(srvInterface, "terminate", agg);
 
         onTerminate(agg, resWriter);
     } catch(exception& e) {
@@ -178,7 +185,7 @@ void* HllAggregateFunctionBase::createAggregateState() {
     return (void*)new std::map<char*, HllHolder*>();
 }
 
-void  HllAggregateFunctionBase::updateResultFromState(IntermediateAggs& intAggs, void* state) {
+void  HllAggregateFunctionBase::updateResultFromState(ServerInterface &srvInterface, IntermediateAggs& intAggs, void* state) {
     try {
         HllHolder* hll = (HllHolder*)state;    
         VString &result = intAggs.getStringRef(0);
@@ -189,13 +196,16 @@ void  HllAggregateFunctionBase::updateResultFromState(IntermediateAggs& intAggs,
                 hll->hll->merge(*currentHll);
             delete currentHll;
         }
-        if (hll->hll != NULL)
+        if (hll->hll != NULL) {
             updateStringFromHll(result, hll->hll);
+            printBinaryHll(srvInterface, "updateResultFromState", result);
+        }
     } catch(exception& e) {
         // Standard exception. Quit.
         vt_report_error(0, "Exception while processing aggregate: [%s]", e.what());
     }
 }
+
 
 void  HllAggregateFunctionBase::deleteAggregateState(void* state) {
     std::map<char*, HllHolder*>& map = *(std::map<char*, HllHolder*>*)state;

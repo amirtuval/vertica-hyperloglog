@@ -33,7 +33,7 @@ int resultLength();
             char *aggPtr = static_cast<char *>(dstTuples[i]) + doff;\
             updateCols(arg_reader, arg, rowCount, intAggs, aggPtr, intOffsets);\
             if (foundAggs.find(aggPtr) != foundAggs.end()) { \
-                updateResultFromState(intAggs, getAggregateState(state, aggPtr)); \
+                updateResultFromState(srvInterface, intAggs, getAggregateState(state, aggPtr)); \
                 foundAggs.erase(aggPtr); \
                 if (foundAggs.size() == 0) \
                     break; \
@@ -58,7 +58,7 @@ private:
     
     void* createAggregateState();
     void* getAggregateState(void* state, char* aggPtr);
-    void  updateResultFromState(IntermediateAggs& intAggs, void* state);
+    void  updateResultFromState(ServerInterface &srvInterface, IntermediateAggs& intAggs, void* state);
     void  deleteAggregateState(void* state);
 
     virtual void aggregate(
