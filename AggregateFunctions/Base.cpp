@@ -55,6 +55,15 @@ SerializedHyperLogLog* hllFromStr(const VString& str) {
     return result;
 }   
 
+void convertToLatest(const VString& src, VString& dest) {
+  SerializedHyperLogLog* hll = hllFromStr(src);
+
+  if (hll != NULL) {
+    updateStringFromHll(dest, hll);
+    delete hll;
+  }
+}
+
 void mergeTwoHlls(ServerInterface &srvInterface, const VString& hllStr1, const VString& hllStr2, VString& result) {
     SerializedHyperLogLog* hll = hllFromStr(hllStr1);
     SerializedHyperLogLog* hll2 = hllFromStr(hllStr2);

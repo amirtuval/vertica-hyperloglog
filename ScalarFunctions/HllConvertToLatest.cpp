@@ -9,15 +9,13 @@
 
 using namespace Vertica;
 
+void convertToLatest(const VString& src, VString& dest);
 int resultLength();
-void mergeTwoHlls(ServerInterface &srvInterface, const VString& hllStr1, const VString& hllStr2, VString& result);
-
-class exception;
 
 /*
  * This is a simple function that adds two integers and returns the result
  */
-class HllMerge2 : public ScalarFunction
+class HllConvertToLatest : public ScalarFunction
 {
 public:
 
@@ -33,16 +31,13 @@ public:
     {
         try {
             // Basic error checking
-            if (argReader.getNumCols() != 2)
-                vt_report_error(0, "Function only accept 2 arguments, but %zu provided", 
+            if (argReader.getNumCols() != 1)
+                vt_report_error(0, "Function only accept 1 argument, but %zu provided", 
                                 argReader.getNumCols());
 
             // While we have inputs to process
             do {
-                const VString& a = argReader.getStringRef(0);
-                const VString& b = argReader.getStringRef(1);
-
-                mergeTwoHlls(srvInterface, a, b, resWriter.getStringRef());
+                convertToLatest(argReader.getStringRef(0), resWriter.getStringRef());
 
                 resWriter.next();
             } while (argReader.next());
@@ -53,26 +48,25 @@ public:
     }
 };
 
-class HllMerge2Factory : public ScalarFunctionFactory
+class HllConvertToLatestFactory : public ScalarFunctionFactory
 {
 protected:
     int mMaxResultLength;
 
 public:
 
-    HllMerge2Factory() {
+    HllConvertToLatestFactory() {
         mMaxResultLength = resultLength();
     }
 
     // return an instance of Add2Ints to perform the actual addition.
     virtual ScalarFunction *createScalarFunction(ServerInterface &interface)
-    { return vt_createFuncObject<HllMerge2>(interface.allocator); }
+    { return vt_createFuncObject<HllConvertToLatest>(interface.allocator); }
 
     virtual void getPrototype(ServerInterface &interface,
                               ColumnTypes &argTypes,
                               ColumnTypes &returnType)
     {
-        argTypes.addVarchar();
         argTypes.addVarchar();
         returnType.addVarchar();
     }
@@ -84,4 +78,4 @@ public:
     }
 };
 
-RegisterFactory(HllMerge2Factory);
+RegisterFactory(HllConvertToLatestFactory);
