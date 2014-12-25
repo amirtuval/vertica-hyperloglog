@@ -48,14 +48,16 @@ void printBinaryHll(ServerInterface& srvInterface, const char* prefix, const VSt
 }
 
 SerializedHyperLogLog* hllFromStr(const VString& str) {
-    if (str.isNull()) {
+    if (str.isNull() || str.length() == 0) {
         return NULL;
     }
 
     const char* cstr = str.data();
     bool needFree = false;
     char prefix[10];
-    strncpy(prefix, cstr, 10);
+    unsigned int prefixLength = fmin(10, str.length());
+    strncpy(prefix, cstr, prefixLength);
+    prefix[prefixLength] = '\0';
 
     if (strstr(prefix, "bin_") == NULL) {
       if (cstr[str.length() - 1] != '\0') {
