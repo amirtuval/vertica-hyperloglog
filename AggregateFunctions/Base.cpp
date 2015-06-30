@@ -264,8 +264,25 @@ void* HllAggregateFunctionBase::getAggregateState(void* state, char* aggPtr) {
     return (void*)hll;
 }
 
+void* createHll() {
+    return new SerializedHyperLogLog(10, false);   
+}
+
+void deleteHll(void* hll) {
+    delete (SerializedHyperLogLog*)hll;  
+}
+
+void addItemToHll(void* hll, const VString& item) {
+    SerializedHyperLogLog* phll = (SerializedHyperLogLog*)hll;
+    phll->add(item.data(), item.length());
+}
+
+void getHllString(void* hll, VString& result) {
+    updateStringFromHll(result, (SerializedHyperLogLog*)hll);
+}
+
 void* SimpleHllAggregateFunctionBase::createHll() {
-    return new SerializedHyperLogLog(10, false);
+    return ::createHll();
 }
 
 void* SimpleHllAggregateFunctionBase::createLegacyHll() {
