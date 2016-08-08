@@ -13,7 +13,7 @@
 SDK_HOME?=/opt/vertica/sdk
 
 CXX?=g++
-CXXFLAGS:=$(CXXFLAGS) -I $(SDK_HOME)/include -I mysql-hyperloglog/libmysqlhll -I mysql-hyperloglog/libmysqlhll/cpp-hyperloglog/include -I mysql-hyperloglog/libmysqlhll/base64 -g -Wall -Wno-unused-value -shared -fPIC 
+CXXFLAGS:=$(CXXFLAGS) -I $(SDK_HOME)/include -I mysql-hyperloglog/libmysqlhll -I mysql-hyperloglog/libmysqlhll/cpp-hyperloglog/include -I mysql-hyperloglog/libmysqlhll/base64 -g -Wall -Wno-unused-value -shared -fPIC -D_GLIBCXX_USE_CXX11_ABI=0
 
 ifdef OPTIMIZE
 ## UDLs should be compiled with compiler optimizations in release builds
